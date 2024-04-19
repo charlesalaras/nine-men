@@ -4,8 +4,9 @@ use crate::LINE_SIZE;
 use crate::node;
 
 pub struct Problem {
-    initial_state: node::Node,
-    operators: [fn(usize) -> node::Node; 2],
+    pub initial_state: node::Node,
+    pub operators: [fn(usize) -> node::Node; 2],
+    goal_state: [u32; LINE_SIZE + CUTAWAYS],
 }
 
 impl Problem {
