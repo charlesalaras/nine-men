@@ -16,9 +16,9 @@ impl Node {
     pub fn init(
         state: [u32; LINE_SIZE + CUTAWAYS],
         cutaways: [u32; CUTAWAYS],
+        g: u32,
         zero_tile: Option<usize>,
     ) -> Node {
-        let mut g: u32 = 0;
         let mut h: u32 = 0;
         let mut index: usize = 0;
         match zero_tile {
@@ -49,7 +49,7 @@ impl Node {
 impl Ord for Node {
     fn cmp(&self, other: &Self) -> Ordering {
         match SEARCH_ALGO {
-            UniformCost => println!("Test"),
+            UniformCost => Ordering::Equal,
             MisplacedTile => println!("Test2"),
             ManhattanDist => println!("Test3"),
         }
