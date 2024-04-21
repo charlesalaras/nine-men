@@ -6,7 +6,7 @@ use std::cmp::Ordering;
 
 pub struct Node {
     pub state: [u32; LINE_SIZE + CUTAWAYS],
-    pub cutaways: [u32; CUTAWAYS],
+    pub cutaways: [usize; CUTAWAYS],
     pub zero_tile: usize,
     pub g: u32,
     pub h: u32,
@@ -15,26 +15,31 @@ pub struct Node {
 impl Node {
     pub fn init(
         state: [u32; LINE_SIZE + CUTAWAYS],
-        cutaways: [u32; CUTAWAYS],
+        cutaways: [usize; CUTAWAYS],
         g: u32,
         zero_tile: Option<usize>,
     ) -> Node {
-        let mut h: u32 = 0;
+        let h: u32 = 0;
         let mut index: usize = 0;
+        // If we know where the zero tile is, then just use the given
+        // Otherwise, we have to find it
+        // Note that cutaways are a seperate type of zero tile
         match zero_tile {
             Some(i) => index = i,
             None => {
                 for i in 0..LINE_SIZE {
                     if state[i] == 0 {
                         index = i;
+                        break;
                     }
                 }
             }
         }
+        // Calculate the given heuristic
         match SEARCH_ALGO {
-            UniformCost => (),
-            MisplacedTile => {}
-            ManhattanDist => {}
+            crate::Algorithm::UniformCost => (),
+            crate::Algorithm::MisplacedTile => {}
+            crate::Algorithm::ManhattanDist => {}
         }
         Node {
             state,
@@ -44,14 +49,42 @@ impl Node {
             h,
         }
     }
+    pub fn print(&self) {
+        let mut cutaway_str = String::new();
+        let mut line_str = String::new();
+        let mut j = 0;
+        for i in 0..LINE_SIZE {
+            if j < CUTAWAYS && i == self.cutaways[j] {
+                cutaway_str.push(char::from_digit(self.state[LINE_SIZE + j], 10).unwrap());
+                j = j + 1;
+            } else {
+                cutaway_str.push(' ');
+            }
+            line_str.push(char::from_digit(self.state[i], 10).unwrap());
+            line_str.push(' ');
+            cutaway_str.push(' ');
+        }
+        println!("Board looks like:");
+        println!("{}", cutaway_str);
+        println!("{}", line_str);
+    }
 }
 
 impl Ord for Node {
     fn cmp(&self, other: &Self) -> Ordering {
-        match SEARCH_ALGO {
-            UniformCost => Ordering::Equal,
-            MisplacedTile => println!("Test2"),
-            ManhattanDist => println!("Test3"),
+        match &SEARCH_ALGO {
+            crate::Algorithm::UniformCost => Ordering::Equal,
+            _ => {
+                let self_cost: u32 = self.g + self.h;
+                let other_cost: u32 = other.g + other.h;
+                if self_cost < other_cost {
+                    Ordering::Less
+                } else if other_cost > self_cost {
+                    Ordering::Greater
+                } else {
+                    Ordering::Equal
+                }
+            }
         }
     }
 }

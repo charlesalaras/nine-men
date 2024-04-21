@@ -19,6 +19,6 @@ impl Problem {
         }
         true
     }
-    fn operator_swap(zero_tile: usize) -> node::Node {}
-    fn operator_cutaway(index: usize) -> node::Node {}
+    //fn operator_swap(zero_tile: usize) -> node::Node {}
+    //fn operator_cutaway(index: usize) -> node::Node {}
 }
