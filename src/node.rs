@@ -4,6 +4,7 @@ use crate::SEARCH_ALGO;
 
 use std::cmp::Ordering;
 
+#[derive(Copy, Clone)]
 pub struct Node {
     pub state: [u32; LINE_SIZE + CUTAWAYS],
     pub cutaways: [usize; CUTAWAYS],
@@ -19,7 +20,7 @@ impl Node {
         g: u32,
         zero_tile: Option<usize>,
     ) -> Node {
-        let h: u32 = 0;
+        let mut h: u32 = 0;
         let mut index: usize = 0;
         // If we know where the zero tile is, then just use the given
         // Otherwise, we have to find it
@@ -38,8 +39,18 @@ impl Node {
         // Calculate the given heuristic
         match SEARCH_ALGO {
             crate::Algorithm::UniformCost => (),
-            crate::Algorithm::MisplacedTile => {}
-            crate::Algorithm::ManhattanDist => {}
+            crate::Algorithm::MisplacedTile => {
+                for i in 0..LINE_SIZE + CUTAWAYS {
+                    if state[i] != crate::GOAL_STATE[i] {
+                        h = h + 1;
+                    }
+                }
+            }
+            crate::Algorithm::ManhattanDist => {
+                for i in 0..LINE_SIZE + CUTAWAYS {
+                    // Base things off the index offset
+                }
+            }
         }
         Node {
             state,
