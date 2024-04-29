@@ -37,18 +37,23 @@ impl Node {
             }
         }
         // Calculate the given heuristic
-        match SEARCH_ALGO {
-            crate::Algorithm::UniformCost => (),
-            crate::Algorithm::MisplacedTile => {
-                for i in 0..LINE_SIZE + CUTAWAYS {
-                    if state[i] != crate::GOAL_STATE[i] {
-                        h = h + 1;
+        unsafe {
+            match SEARCH_ALGO {
+                crate::Algorithm::UniformCost => (),
+                crate::Algorithm::MisplacedTile => {
+                    for i in 0..LINE_SIZE + CUTAWAYS {
+                        if state[i] != crate::GOAL_STATE[i] {
+                            h = h + 1;
+                        }
                     }
                 }
-            }
-            crate::Algorithm::ManhattanDist => {
-                for i in 0..LINE_SIZE + CUTAWAYS {
-                    // Base things off the index offset
+                crate::Algorithm::ManhattanDist => {
+                    for i in 0..LINE_SIZE {
+                        let curr = crate::GOAL_STATE[i];
+                    }
+                    for i in 0..CUTAWAYS {
+                        let curr = cutaways[i];
+                    }
                 }
             }
         }
@@ -83,17 +88,22 @@ impl Node {
 
 impl Ord for Node {
     fn cmp(&self, other: &Self) -> Ordering {
-        match &SEARCH_ALGO {
-            crate::Algorithm::UniformCost => Ordering::Equal,
-            _ => {
-                let self_cost: u32 = self.g + self.h;
-                let other_cost: u32 = other.g + other.h;
-                if self_cost < other_cost {
-                    Ordering::Less
-                } else if other_cost > self_cost {
-                    Ordering::Greater
-                } else {
-                    Ordering::Equal
+        unsafe {
+            match SEARCH_ALGO {
+                crate::Algorithm::UniformCost => Ordering::Equal,
+                _ => {
+                    // Note that Greater is returned for smaller costs
+                    // but Less is returned for greater costs
+                    // This ensures we have a min heap
+                    let self_cost: u32 = self.g + self.h;
+                    let other_cost: u32 = other.g + other.h;
+                    if self_cost < other_cost {
+                        Ordering::Greater
+                    } else if other_cost > self_cost {
+                        Ordering::Less
+                    } else {
+                        Ordering::Equal
+                    }
                 }
             }
         }
