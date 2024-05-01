@@ -2,6 +2,7 @@ use crate::node;
 use crate::problem;
 use crate::runtime;
 
+use std::cmp;
 use std::collections::BinaryHeap;
 
 use crate::CUTAWAYS;
@@ -11,32 +12,17 @@ use crate::OPERATORS;
 fn expand(
     node: node::Node,
     operators: [fn(node::Node, usize, usize) -> node::Node; OPERATORS],
+    runtime: &mut runtime::Runtime,
 ) -> Vec<node::Node> {
+    runtime.print(format!(
+        "The best state to expand with a g(n) = {} and h(n) = {} is:\n{}\n",
+        node.g,
+        node.h,
+        node.print()
+    ));
+    runtime.nodes_expanded = runtime.nodes_expanded + 1;
     let mut new_nodes: Vec<node::Node> = Vec::<node::Node>::new();
-    // Check the cutaways
-    for i in 0..CUTAWAYS {
-        // Move Tile Up
-        if node.state[node.cutaways[i]] != 0 && node.state[LINE_SIZE + i] == 0 {
-            new_nodes.push(operators[0](node, LINE_SIZE + 1, node.cutaways[i]));
-        }
-        // Move Tile Down
-        if node.state[node.cutaways[i]] == 0 && node.state[LINE_SIZE + i] != 0 {
-            new_nodes.push(operators[1](node, node.cutaways[i], LINE_SIZE + 1));
-        }
-    }
-    // Move Tile Right
-    if node.zero_tile == 0 {
-        new_nodes.push(operators[2](node, node.zero_tile, 1));
-    }
-    // Move Tile Left
-    else if node.zero_tile == LINE_SIZE - 1 {
-        new_nodes.push(operators[3](node, LINE_SIZE - 1, node.zero_tile));
-    }
-    // Move Tile Left and Right
-    else {
-        new_nodes.push(operators[2](node, node.zero_tile, node.zero_tile - 1));
-        new_nodes.push(operators[3](node, node.zero_tile, node.zero_tile + 1));
-    }
+
     new_nodes
 }
 
@@ -59,18 +45,20 @@ Returns an Option where:
 - None value which means no node could be found
 */
 pub fn search(
-    problem: problem::Problem,
+    problem: &problem::Problem,
     queueing_function: fn(BinaryHeap<node::Node>, Vec<node::Node>) -> BinaryHeap<node::Node>,
+    runtime: &mut runtime::Runtime,
 ) -> Option<node::Node> {
     let mut nodes = BinaryHeap::<node::Node>::new();
     nodes.push(problem.initial_state);
     while !nodes.is_empty() {
+        runtime.max_size = cmp::max(runtime.max_size, nodes.len());
         let node = nodes.pop().unwrap();
         if problem::Problem::goal_test(node.state) {
             return Some(node);
         }
         // insert into nodes by recreating heap using queueing function
-        nodes = queueing_function(nodes, expand(node, problem.operators));
+        nodes = queueing_function(nodes, expand(node, problem.operators, runtime));
     }
     None
 }

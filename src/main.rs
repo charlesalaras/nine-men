@@ -3,6 +3,7 @@ mod problem;
 mod runtime;
 mod search;
 
+use crate::runtime::Algorithm;
 use clap::Parser;
 use std::io;
 
@@ -11,19 +12,13 @@ use std::io;
 struct Args {
     /// Output trace of search to stdout
     #[arg(long, default_value_t = true)]
-    trace: bool,
+    no_trace: bool,
     /// Path of file to write trace to
     #[arg(short, long)]
-    logfile: String,
+    logfile: Option<String>,
     /// Measure and output search time
     #[arg(short, long, default_value_t = false)]
     time: bool,
-}
-
-enum Algorithm {
-    UniformCost,
-    MisplacedTile,
-    ManhattanDist,
 }
 
 /*
@@ -36,11 +31,11 @@ Parameters for problem:
 const LINE_SIZE: usize = 10;
 const CUTAWAYS: usize = 3;
 const OPERATORS: usize = 4;
-static mut SEARCH_ALGO: Algorithm = Algorithm::UniformCost;
 static GOAL_STATE: [u32; LINE_SIZE + CUTAWAYS] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0];
 
 fn main() {
     let args = Args::parse();
+    let mut algorithm: runtime::Algorithm;
     println!("CS205 Spring 2024: Charles Alaras' Nine Men in a Trench Solver\n");
     loop {
         println!("Select a number (1, 2, 3) to define the algorithm heuristics:");
@@ -55,24 +50,18 @@ fn main() {
         if selection.is_ok() {
             match selection.unwrap() {
                 1 => {
-                    unsafe {
-                        println!("You selected: Uniform Cost");
-                        SEARCH_ALGO = Algorithm::UniformCost;
-                    }
+                    println!("You selected: Uniform Cost");
+                    algorithm = Algorithm::UniformCost;
                     break;
                 }
                 2 => {
-                    unsafe {
-                        println!("You selected: Misplaced Tile");
-                        SEARCH_ALGO = Algorithm::MisplacedTile;
-                    }
+                    println!("You selected: Misplaced Tile");
+                    algorithm = Algorithm::MisplacedTile;
                     break;
                 }
                 3 => {
-                    unsafe {
-                        println!("You selected: Manhattan Distance");
-                        SEARCH_ALGO = Algorithm::ManhattanDist;
-                    }
+                    println!("You selected: Manhattan Distance");
+                    algorithm = Algorithm::ManhattanDist;
                     break;
                 }
                 _ => {
@@ -83,26 +72,35 @@ fn main() {
             println!("ERROR: {}", selection.err().unwrap());
         }
     }
-    // Check if we should be timing
+    // If the log file is not defined and no trace, don't print to log
+    // If the log file is defined and no trace, just print to log
+    // If no log file is defined but trace, just print to standard out
+    // If the log file is defined and trace, print to log and trace
+    let mut filename: Option<String> = args.logfile;
+    let mut runtime: runtime::Runtime =
+        runtime::Runtime::init(!args.no_trace, args.time, algorithm, filename);
     let node: node::Node = node::Node::init(
         [0, 2, 3, 4, 5, 6, 7, 8, 9, 1, 0, 0, 0],
         [3, 5, 7],
         0,
         Some(0),
+        runtime.search,
     );
+    /*
     let problem: problem::Problem = problem::Problem::init(node);
-    let result = search::search(problem, search::queueing_function);
+    let result = search::search(problem, search::queueing_function, runtime);
     match result {
         Some(x) => {
             println!("Goal state found!");
             x.print();
 
-            println!("\nSolution depth was {}", 5);
-            println!("Number of nodes expanded: {}", 5);
-            println!("Max queue size: {}", 5);
+            println!("\nSolution depth was {}", x.g);
+            println!("Number of nodes expanded: {}", runtime.nodes_expanded);
+            println!("Max queue size: {}", runtime.max_size);
         }
         None => {
             println!("Failure");
         }
     }
+    */
 }

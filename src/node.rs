@@ -1,14 +1,14 @@
 use crate::CUTAWAYS;
 use crate::LINE_SIZE;
-use crate::SEARCH_ALGO;
 
+use crate::runtime::Algorithm;
 use std::cmp::Ordering;
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct Node {
     pub state: [u32; LINE_SIZE + CUTAWAYS],
     pub cutaways: [usize; CUTAWAYS],
-    pub zero_tile: usize,
+    pub zero_tile: Vec<u32>,
     pub g: u32,
     pub h: u32,
 }
@@ -19,6 +19,7 @@ impl Node {
         cutaways: [usize; CUTAWAYS],
         g: u32,
         zero_tile: Option<usize>,
+        algorithm: Algorithm,
     ) -> Node {
         let mut h: u32 = 0;
         let mut index: usize = 0;
@@ -38,7 +39,7 @@ impl Node {
         }
         // Calculate the given heuristic
         unsafe {
-            match SEARCH_ALGO {
+            match algorithm {
                 crate::Algorithm::UniformCost => (),
                 crate::Algorithm::MisplacedTile => {
                     for i in 0..LINE_SIZE + CUTAWAYS {
@@ -60,12 +61,12 @@ impl Node {
         Node {
             state,
             cutaways,
-            zero_tile: index,
+            zero_tile: Vec::new(),
             g,
             h,
         }
     }
-    pub fn print(&self) {
+    pub fn print(&self) -> String {
         let mut cutaway_str = String::new();
         let mut line_str = String::new();
         let mut j = 0;
@@ -80,32 +81,23 @@ impl Node {
             line_str.push(' ');
             cutaway_str.push(' ');
         }
-        println!("Board looks like:");
         println!("{}", cutaway_str);
         println!("{}", line_str);
+        let result = format!("{}\n{}\n", cutaway_str, line_str);
+        result
     }
 }
 
 impl Ord for Node {
     fn cmp(&self, other: &Self) -> Ordering {
-        unsafe {
-            match SEARCH_ALGO {
-                crate::Algorithm::UniformCost => Ordering::Equal,
-                _ => {
-                    // Note that Greater is returned for smaller costs
-                    // but Less is returned for greater costs
-                    // This ensures we have a min heap
-                    let self_cost: u32 = self.g + self.h;
-                    let other_cost: u32 = other.g + other.h;
-                    if self_cost < other_cost {
-                        Ordering::Greater
-                    } else if other_cost > self_cost {
-                        Ordering::Less
-                    } else {
-                        Ordering::Equal
-                    }
-                }
-            }
+        let self_cost: u32 = self.g + self.h;
+        let other_cost: u32 = other.g + other.h;
+        if self_cost < other_cost {
+            Ordering::Greater
+        } else if other_cost > self_cost {
+            Ordering::Less
+        } else {
+            Ordering::Equal
         }
     }
 }
