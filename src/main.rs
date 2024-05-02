@@ -12,7 +12,7 @@ use std::io;
 #[command(version, about, long_about = None)]
 struct Args {
     /// Output trace of search to stdout
-    #[arg(long, default_value_t = true)]
+    #[arg(long, default_value_t = false)]
     no_trace: bool,
     /// Path of file to write trace to
     #[arg(short, long)]
@@ -36,7 +36,7 @@ static GOAL_STATE: [u32; LINE_SIZE + CUTAWAYS] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 
 
 fn main() {
     let args = Args::parse();
-    let mut algorithm: runtime::Algorithm;
+    let algorithm: runtime::Algorithm;
     if (!args.no_trace || args.logfile.is_some()) && args.time {
         println!("{}", "WARNING: Tracing program negatively impacts running time of search. Time statistics may not be accurate.".red().bold());
     }
@@ -80,7 +80,7 @@ fn main() {
     // If the log file is defined and no trace, just print to log
     // If no log file is defined but trace, just print to standard out
     // If the log file is defined and trace, print to log and trace
-    let mut filename: Option<String> = args.logfile;
+    let filename: Option<String> = args.logfile;
     let mut runtime: runtime::Runtime =
         runtime::Runtime::init(!args.no_trace, args.time, algorithm, &filename);
     let node: node::Node = node::Node::init(
@@ -89,9 +89,17 @@ fn main() {
         0,
         runtime.search,
     );
-    /*
+
     let problem: problem::Problem = problem::Problem::init(node);
-    let result = search::search(problem, search::queueing_function, runtime);
+    let result;
+
+    if runtime.time {
+        runtime.start_timer();
+        result = search::search(problem, search::queueing_function, &mut runtime);
+        runtime.end_timer();
+    } else {
+        result = search::search(problem, search::queueing_function, &mut runtime);
+    }
     match result {
         Some(x) => {
             println!("Goal state found!");
@@ -105,5 +113,4 @@ fn main() {
             println!("Failure");
         }
     }
-    */
 }

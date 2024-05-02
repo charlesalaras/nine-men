@@ -62,8 +62,6 @@ impl Runtime {
         }
     }
     pub fn end_timer(&mut self) {
-        if self.start_time.is_some() {
-            self.duration = Some(self.start_time.unwrap().elapsed());
-        }
+        self.duration = Some(self.start_time.unwrap().elapsed());
     }
 }

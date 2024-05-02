@@ -83,8 +83,6 @@ impl Node {
             line_str.push(' ');
             cutaway_str.push(' ');
         }
-        println!("{}", cutaway_str);
-        println!("{}", line_str);
         let result = format!("{}\n{}\n", cutaway_str, line_str);
         result
     }
