@@ -1,6 +1,7 @@
 use crate::node;
 use crate::problem;
 use crate::runtime;
+use crate::runtime::Algorithm;
 
 use std::cmp;
 use std::collections::BinaryHeap;
@@ -10,8 +11,8 @@ use crate::LINE_SIZE;
 use crate::OPERATORS;
 
 fn expand(
-    node: node::Node,
-    operators: [fn(node::Node, usize, usize) -> node::Node; OPERATORS],
+    node: &node::Node,
+    operators: [fn(&node::Node, usize, usize, Algorithm) -> node::Node; OPERATORS],
     runtime: &mut runtime::Runtime,
 ) -> Vec<node::Node> {
     runtime.print(format!(
@@ -20,9 +21,40 @@ fn expand(
         node.h,
         node.print()
     ));
-    runtime.nodes_expanded = runtime.nodes_expanded + 1;
     let mut new_nodes: Vec<node::Node> = Vec::<node::Node>::new();
-
+    /*
+    if !runtime.seen.contains(&node) {
+        runtime.seen.insert(node);
+        runtime.nodes_expanded = runtime.nodes_expanded + 1;
+    }
+    */
+    for i in node.zero_tiles.clone() {
+        // Check if its an edge tile
+        if i == 0 && node.state[i + 1] != 0 {
+            new_nodes.push(operators[0](node, i, i + 1, runtime.search));
+        }
+        if i == LINE_SIZE - 1 && node.state[i - 1] != 0 {
+            new_nodes.push(operators[0](node, i, i - 1, runtime.search));
+        }
+        // Check if its a cutaway tile
+        for j in 0..CUTAWAYS {
+            // A zero exists in the line which can be swapped with the cutaway
+            if i == node.cutaways[j] && node.state[LINE_SIZE + j] != 0 {
+                new_nodes.push(operators[0](node, i, LINE_SIZE + j, runtime.search));
+            }
+            // A zero exists in the cutaway which can be swapped with the line
+            if i == LINE_SIZE + j && node.state[node.cutaways[j]] != 0 {
+                new_nodes.push(operators[0](node, i, LINE_SIZE + j, runtime.search));
+            }
+        }
+        // Check if you can swap left or right
+        if i > 0 && node.state[i - 1] != 0 {
+            new_nodes.push(operators[0](node, i, i + 1, runtime.search));
+        }
+        if i < LINE_SIZE - 1 && node.state[i + 1] != 0 {
+            new_nodes.push(operators[0](node, i, i + 1, runtime.search));
+        }
+    }
     new_nodes
 }
 
@@ -45,7 +77,7 @@ Returns an Option where:
 - None value which means no node could be found
 */
 pub fn search(
-    problem: &problem::Problem,
+    problem: problem::Problem,
     queueing_function: fn(BinaryHeap<node::Node>, Vec<node::Node>) -> BinaryHeap<node::Node>,
     runtime: &mut runtime::Runtime,
 ) -> Option<node::Node> {
@@ -58,7 +90,7 @@ pub fn search(
             return Some(node);
         }
         // insert into nodes by recreating heap using queueing function
-        nodes = queueing_function(nodes, expand(node, problem.operators, runtime));
+        nodes = queueing_function(nodes, expand(&node, problem.operators, runtime));
     }
     None
 }

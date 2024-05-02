@@ -4,11 +4,11 @@ use crate::LINE_SIZE;
 use crate::runtime::Algorithm;
 use std::cmp::Ordering;
 
-#[derive(Clone)]
+#[derive(Clone, Hash)]
 pub struct Node {
     pub state: [u32; LINE_SIZE + CUTAWAYS],
     pub cutaways: [usize; CUTAWAYS],
-    pub zero_tile: Vec<u32>,
+    pub zero_tiles: Vec<usize>,
     pub g: u32,
     pub h: u32,
 }
@@ -18,50 +18,52 @@ impl Node {
         state: [u32; LINE_SIZE + CUTAWAYS],
         cutaways: [usize; CUTAWAYS],
         g: u32,
-        zero_tile: Option<usize>,
         algorithm: Algorithm,
     ) -> Node {
         let mut h: u32 = 0;
-        let mut index: usize = 0;
         // If we know where the zero tile is, then just use the given
         // Otherwise, we have to find it
         // Note that cutaways are a seperate type of zero tile
-        match zero_tile {
-            Some(i) => index = i,
-            None => {
-                for i in 0..LINE_SIZE {
-                    if state[i] == 0 {
-                        index = i;
-                        break;
-                    }
-                }
+        let mut zero_tiles: Vec<usize> = Vec::new();
+        for i in 0..LINE_SIZE + CUTAWAYS {
+            if state[i] == 0 {
+                zero_tiles.push(i);
             }
         }
         // Calculate the given heuristic
-        unsafe {
-            match algorithm {
-                crate::Algorithm::UniformCost => (),
-                crate::Algorithm::MisplacedTile => {
-                    for i in 0..LINE_SIZE + CUTAWAYS {
-                        if state[i] != crate::GOAL_STATE[i] {
-                            h = h + 1;
-                        }
+        match algorithm {
+            crate::Algorithm::UniformCost => (),
+            crate::Algorithm::MisplacedTile => {
+                for i in 0..LINE_SIZE + CUTAWAYS {
+                    if state[i] != crate::GOAL_STATE[i] {
+                        h = h + 1;
                     }
                 }
-                crate::Algorithm::ManhattanDist => {
-                    for i in 0..LINE_SIZE {
-                        let curr = crate::GOAL_STATE[i];
+            }
+            // Note that the heuristic only cares about
+            // where the '1' tile is.
+            crate::Algorithm::ManhattanDist => {
+                for i in 0..LINE_SIZE {
+                    if state[i] == 1 {
+                        h = h + (i as u32);
                     }
+                }
+                // If '1' was not found in the line,
+                // it may exist in the cutaways
+                if h == 0 {
                     for i in 0..CUTAWAYS {
-                        let curr = cutaways[i];
+                        if state[LINE_SIZE + i] == 1 {
+                            h = h + (cutaways[i] + 1) as u32;
+                        }
                     }
                 }
             }
         }
+
         Node {
             state,
             cutaways,
-            zero_tile: Vec::new(),
+            zero_tiles,
             g,
             h,
         }
