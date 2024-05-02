@@ -32,7 +32,7 @@ Parameters for problem:
 const LINE_SIZE: usize = 10;
 const CUTAWAYS: usize = 3;
 const OPERATORS: usize = 1;
-static GOAL_STATE: [u32; LINE_SIZE + CUTAWAYS] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0];
+const GOAL_STATE: [u32; LINE_SIZE + CUTAWAYS] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0];
 
 fn main() {
     let args = Args::parse();
