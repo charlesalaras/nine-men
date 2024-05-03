@@ -5,6 +5,7 @@ use crate::runtime::Algorithm;
 
 use std::cmp;
 use std::collections::BinaryHeap;
+//use std::{thread, time};
 
 use crate::CUTAWAYS;
 use crate::LINE_SIZE;
@@ -15,6 +16,10 @@ fn expand(
     operators: [fn(&node::Node, usize, usize, Algorithm) -> node::Node; OPERATORS],
     runtime: &mut runtime::Runtime,
 ) -> Vec<node::Node> {
+    /*
+    let one_sec = time::Duration::from_secs(1);
+    thread::sleep(one_sec);
+    */
     runtime.print(format!(
         "The best state to expand with a g(n) = {} and h(n) = {} is:\n{}\n",
         node.g,
@@ -23,34 +28,42 @@ fn expand(
     ));
     let mut new_nodes: Vec<node::Node> = Vec::<node::Node>::new();
     /*
-    if !runtime.seen.contains(&node) {
-        runtime.seen.insert(node);
-        runtime.nodes_expanded = runtime.nodes_expanded + 1;
+    if runtime.seen.contains(&node) {
+        println!("Duplicate found!");
+        return new_nodes;
     }
     */
-    for i in node.zero_tiles.clone() {
-        // Check if its an edge tile
-        if i == 0 && node.state[i + 1] != 0 {
-            new_nodes.push(operators[0](node, i, i + 1, runtime.search));
-        } else if i == LINE_SIZE - 1 && node.state[i - 1] != 0 {
-            new_nodes.push(operators[0](node, i, i - 1, runtime.search));
-        } else if i < LINE_SIZE {
-            if node.state[i + 1] != 0 {
-                new_nodes.push(operators[0](node, i, i + 1, runtime.search));
-            }
-            if node.state[i - 1] != 0 {
-                new_nodes.push(operators[0](node, i, i - 1, runtime.search));
-            }
-        }
+    runtime.seen.insert(node.clone());
+    runtime.nodes_expanded = runtime.nodes_expanded + 1;
+    for i in &node.zero_tiles {
         // Check if its a cutaway tile
         for j in 0..CUTAWAYS {
             // A zero exists in the line which can be swapped with the cutaway
-            if i == node.cutaways[j] && node.state[LINE_SIZE + j] != 0 {
-                new_nodes.push(operators[0](node, i, LINE_SIZE + j, runtime.search));
+            if *i == node.cutaways[j] && node.state[LINE_SIZE + j] != 0 {
+                new_nodes.push(operators[0](node, *i, LINE_SIZE + j, runtime.search));
+                //runtime.print(new_nodes[new_nodes.len() - 1].print());
             }
             // A zero exists in the cutaway which can be swapped with the line
-            if i == LINE_SIZE + j && node.state[node.cutaways[j]] != 0 {
-                new_nodes.push(operators[0](node, i, node.cutaways[j], runtime.search));
+            if *i == LINE_SIZE + j && node.state[node.cutaways[j]] != 0 {
+                new_nodes.push(operators[0](node, *i, node.cutaways[j], runtime.search));
+
+                //runtime.print(new_nodes[new_nodes.len() - 1].print());
+            }
+        }
+        if *i < LINE_SIZE {
+            if *i != LINE_SIZE - 1 {
+                if node.state[i + 1] != 0 {
+                    new_nodes.push(operators[0](node, *i, *i + 1, runtime.search));
+
+                    //runtime.print(new_nodes[new_nodes.len() - 1].print());
+                }
+            }
+            if *i != 0 {
+                if node.state[i - 1] != 0 {
+                    new_nodes.push(operators[0](node, *i, *i - 1, runtime.search));
+
+                    //runtime.print(new_nodes[new_nodes.len() - 1].print());
+                }
             }
         }
     }
@@ -84,6 +97,7 @@ pub fn search(
     let mut nodes = BinaryHeap::<node::Node>::new();
     nodes.push(problem.initial_state);
     while !nodes.is_empty() {
+        //while i < 2 {
         runtime.max_size = cmp::max(runtime.max_size, nodes.len());
         let node = nodes.pop().unwrap();
         if problem::Problem::goal_test(node.state) {
