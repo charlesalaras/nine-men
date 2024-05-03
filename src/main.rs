@@ -40,7 +40,12 @@ fn main() {
     if (!args.no_trace || args.logfile.is_some()) && args.time {
         println!("{}", "WARNING: Tracing program negatively impacts running time of search. Time statistics may not be accurate.".red().bold());
     }
-    println!("CS205 Spring 2024: Charles Alaras' Nine Men in a Trench Solver\n");
+    println!(
+        "{}",
+        "CS205 Spring 2024: Charles Alaras' Nine Men in a Trench Solver\n"
+            .white()
+            .bold()
+    );
     loop {
         println!("Select a number (1, 2, 3) to define the algorithm heuristics:");
         println!("(1) Uniform Cost Search");
@@ -54,17 +59,17 @@ fn main() {
         if selection.is_ok() {
             match selection.unwrap() {
                 1 => {
-                    println!("You selected: Uniform Cost");
+                    println!("You selected: {}", "Uniform Cost".purple());
                     algorithm = Algorithm::UniformCost;
                     break;
                 }
                 2 => {
-                    println!("You selected: Misplaced Tile");
+                    println!("You selected: {}", "Misplaced Tile".purple());
                     algorithm = Algorithm::MisplacedTile;
                     break;
                 }
                 3 => {
-                    println!("You selected: Manhattan Distance");
+                    println!("You selected: {}", "Manhattan Distance".purple());
                     algorithm = Algorithm::ManhattanDist;
                     break;
                 }
@@ -76,10 +81,6 @@ fn main() {
             println!("ERROR: {}", selection.err().unwrap());
         }
     }
-    // If the log file is not defined and no trace, don't print to log
-    // If the log file is defined and no trace, just print to log
-    // If no log file is defined but trace, just print to standard out
-    // If the log file is defined and trace, print to log and trace
     let filename: Option<String> = args.logfile;
     let mut runtime: runtime::Runtime =
         runtime::Runtime::init(!args.no_trace, args.time, algorithm, &filename);
@@ -102,15 +103,15 @@ fn main() {
     }
     match result {
         Some(x) => {
-            println!("Goal state found!");
-            x.print();
+            println!("{}", "Goal state found!".green().bold());
+            println!("{}", x.print());
 
-            println!("\nSolution depth was {}", x.g);
+            println!("Solution depth was {}", x.g);
             println!("Number of nodes expanded: {}", runtime.nodes_expanded);
             println!("Max queue size: {}", runtime.max_size);
         }
         None => {
-            println!("Failure");
+            println!("{}", "Failure".red().bold());
         }
     }
 }

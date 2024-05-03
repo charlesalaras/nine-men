@@ -3,6 +3,7 @@ use crate::problem;
 use crate::runtime;
 use crate::runtime::Algorithm;
 
+use colored::Colorize;
 use std::cmp;
 use std::collections::BinaryHeap;
 //use std::{thread, time};
@@ -16,23 +17,23 @@ fn expand(
     operators: [fn(&node::Node, usize, usize, Algorithm) -> node::Node; OPERATORS],
     runtime: &mut runtime::Runtime,
 ) -> Vec<node::Node> {
-    /*
-    let one_sec = time::Duration::from_secs(1);
-    thread::sleep(one_sec);
-    */
+    //let one_sec = time::Duration::from_secs(1);
+    //thread::sleep(one_sec);
+
     runtime.print(format!(
-        "The best state to expand with a g(n) = {} and h(n) = {} is:\n{}\n",
+        "The best state to expand with a {} = {} and {} = {} is:\n{}\n",
+        "g(n)".green(),
         node.g,
+        "h(n)".blue(),
         node.h,
         node.print()
     ));
     let mut new_nodes: Vec<node::Node> = Vec::<node::Node>::new();
-    /*
     if runtime.seen.contains(&node) {
-        println!("Duplicate found!");
+        //println!("Duplicate found!");
         return new_nodes;
     }
-    */
+
     runtime.seen.insert(node.clone());
     runtime.nodes_expanded = runtime.nodes_expanded + 1;
     for i in &node.zero_tiles {
@@ -106,6 +107,7 @@ pub fn search(
         // insert into nodes by recreating heap using queueing function
         nodes = queueing_function(nodes, expand(&node, problem.operators, runtime));
         //i = i + 1;
+        drop(node);
     }
     None
 }
