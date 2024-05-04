@@ -31,10 +31,11 @@ fn expand(
     let mut new_nodes: Vec<node::Node> = Vec::<node::Node>::new();
     if runtime.seen.contains(&node) {
         //println!("Duplicate found!");
+        //println!("{}", node.print());
         return new_nodes;
     }
 
-    runtime.seen.insert(node.clone());
+    runtime.seen.insert(*node);
     runtime.nodes_expanded = runtime.nodes_expanded + 1;
     for i in &node.zero_tiles {
         // Check if its a cutaway tile
@@ -98,7 +99,7 @@ pub fn search(
     let mut nodes = BinaryHeap::<node::Node>::new();
     nodes.push(problem.initial_state);
     while !nodes.is_empty() {
-        //while i < 2 {
+        //while i < 20 {
         runtime.max_size = cmp::max(runtime.max_size, nodes.len());
         let node = nodes.pop().unwrap();
         if problem::Problem::goal_test(node.state) {
@@ -107,7 +108,6 @@ pub fn search(
         // insert into nodes by recreating heap using queueing function
         nodes = queueing_function(nodes, expand(&node, problem.operators, runtime));
         //i = i + 1;
-        drop(node);
     }
     None
 }

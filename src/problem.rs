@@ -19,7 +19,7 @@ impl Problem {
     }
     pub fn goal_test(state: [u32; CUTAWAYS + LINE_SIZE]) -> bool {
         let mut curr: u32 = 1;
-        for i in 1..LINE_SIZE - 1 {
+        for i in 1..LINE_SIZE {
             if state[i - 1] != curr {
                 return false;
             }

@@ -3,12 +3,13 @@ use crate::LINE_SIZE;
 
 use crate::runtime::Algorithm;
 use std::cmp::Ordering;
+use std::hash::{Hash, Hasher};
 
-#[derive(Clone, Hash)]
+#[derive(Copy, Clone)]
 pub struct Node {
     pub state: [u32; LINE_SIZE + CUTAWAYS],
     pub cutaways: [usize; CUTAWAYS],
-    pub zero_tiles: Vec<usize>,
+    pub zero_tiles: [usize; CUTAWAYS + 1],
     pub g: u32,
     pub h: u32,
 }
@@ -24,10 +25,12 @@ impl Node {
         // If we know where the zero tile is, then just use the given
         // Otherwise, we have to find it
         // Note that cutaways are a seperate type of zero tile
-        let mut zero_tiles: Vec<usize> = Vec::new();
+        let mut zero_tiles: [usize; CUTAWAYS + 1] = [0, 0, 0, 0];
+        let mut j = 0;
         for i in 0..LINE_SIZE + CUTAWAYS {
             if state[i] == 0 {
-                zero_tiles.push(i);
+                zero_tiles[j] = i;
+                j += 1;
             }
         }
         // Calculate the given heuristic
@@ -99,6 +102,12 @@ impl Ord for Node {
         } else {
             Ordering::Equal
         }
+    }
+}
+
+impl Hash for Node {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.state.hash(state);
     }
 }
 
