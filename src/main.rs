@@ -6,7 +6,7 @@ mod search;
 use crate::runtime::Algorithm;
 use clap::Parser;
 use colored::Colorize;
-use std::{io, mem::size_of};
+use std::io;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -35,7 +35,6 @@ const OPERATORS: usize = 1;
 const GOAL_STATE: [u32; LINE_SIZE + CUTAWAYS] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0];
 
 fn main() {
-    println!("Node size: {}", size_of::<node::Node>());
     let args = Args::parse();
     let algorithm: runtime::Algorithm;
     if (!args.no_trace || args.logfile.is_some()) && args.time {
@@ -99,6 +98,7 @@ fn main() {
         runtime.start_timer();
         result = search::search(problem, search::queueing_function, &mut runtime);
         runtime.end_timer();
+        println!("Time: {}", runtime.duration.unwrap().as_millis());
     } else {
         result = search::search(problem, search::queueing_function, &mut runtime);
     }
