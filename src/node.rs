@@ -100,7 +100,11 @@ impl Ord for Node {
         } else if other_cost > self_cost {
             Ordering::Less
         } else {
-            Ordering::Equal
+            if self.g < other.g {
+                Ordering::Greater
+            } else {
+                Ordering::Less
+            }
         }
     }
 }

@@ -11,7 +11,7 @@ use std::io;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    /// Output trace of search to stdout
+    /// Disable trace to stdout
     #[arg(long, default_value_t = false)]
     no_trace: bool,
     /// Path of file to write trace to
@@ -98,7 +98,7 @@ fn main() {
         runtime.start_timer();
         result = search::search(problem, search::queueing_function, &mut runtime);
         runtime.end_timer();
-        println!("Time: {}", runtime.duration.unwrap().as_millis());
+        println!("Time: {:.2}", runtime.duration.unwrap().as_secs_f64());
     } else {
         result = search::search(problem, search::queueing_function, &mut runtime);
     }
