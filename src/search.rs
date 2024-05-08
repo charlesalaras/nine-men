@@ -6,7 +6,6 @@ use crate::runtime::Algorithm;
 use colored::Colorize;
 use std::cmp;
 use std::collections::BinaryHeap;
-//use std::{thread, time};
 
 use crate::CUTAWAYS;
 use crate::LINE_SIZE;
@@ -17,9 +16,6 @@ fn expand(
     operators: [fn(&node::Node, usize, usize, Algorithm) -> node::Node; OPERATORS],
     runtime: &mut runtime::Runtime,
 ) -> Vec<node::Node> {
-    //let one_sec = time::Duration::from_secs(1);
-    //thread::sleep(one_sec);
-
     runtime.print(format!(
         "The best state to expand with a {} = {} and {} = {} is:\n{}\n",
         "g(n)".green(),
@@ -29,9 +25,8 @@ fn expand(
         node.print()
     ));
     let mut new_nodes: Vec<node::Node> = Vec::<node::Node>::new();
+    // Check for duplicates
     if runtime.seen.contains(&node) {
-        //println!("Duplicate found!");
-        //println!("{}", node.print());
         return new_nodes;
     }
 
@@ -43,28 +38,21 @@ fn expand(
             // A zero exists in the line which can be swapped with the cutaway
             if *i == node.cutaways[j] && node.state[LINE_SIZE + j] != 0 {
                 new_nodes.push(operators[0](node, *i, LINE_SIZE + j, runtime.search));
-                //runtime.print(new_nodes[new_nodes.len() - 1].print());
             }
             // A zero exists in the cutaway which can be swapped with the line
             if *i == LINE_SIZE + j && node.state[node.cutaways[j]] != 0 {
                 new_nodes.push(operators[0](node, *i, node.cutaways[j], runtime.search));
-
-                //runtime.print(new_nodes[new_nodes.len() - 1].print());
             }
         }
         if *i < LINE_SIZE {
             if *i != LINE_SIZE - 1 {
                 if node.state[i + 1] != 0 {
                     new_nodes.push(operators[0](node, *i, *i + 1, runtime.search));
-
-                    //runtime.print(new_nodes[new_nodes.len() - 1].print());
                 }
             }
             if *i != 0 {
                 if node.state[i - 1] != 0 {
                     new_nodes.push(operators[0](node, *i, *i - 1, runtime.search));
-
-                    //runtime.print(new_nodes[new_nodes.len() - 1].print());
                 }
             }
         }

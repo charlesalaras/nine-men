@@ -10,7 +10,23 @@ pub enum Algorithm {
     MisplacedTile,
     ManhattanDist,
 }
-// This struct stores important things about the currently running program
+/*
+Runtime object to store important statistics and members to track the program.
+Note that this is required due to Rust's aversion to global variables.
+- log_name: A string representing the file name (or None if we do not need to write to a file)
+- log: File object if writing to a file (or None if we do not need to write to a file)
+- trace: Determines output to stdout
+- time: Determines timing of search
+- start_time: The Instant that the search began (or None if not timing / has not started)
+- duration: Total running time of search (or None if not timing / incomplete)
+- nodes_expanded: Total number of nodes expanded during search
+- max_size: Maximum size of queue during search
+- search: Heuristic being used in the search
+- seen: A HashSet of nodes, used by the expand function (see search.rs) to store already expanded nodes
+Note that seen exists in the Runtime struct because
+Runtime is always available to the search and expand
+functions. Problem is only passed in to search, not expand.
+*/
 pub struct Runtime {
     pub log_name: Option<String>,
     log: Option<File>,
@@ -25,6 +41,7 @@ pub struct Runtime {
 }
 
 impl Runtime {
+    // Construct a file (if needed) and return a Runtime
     pub fn init(trace: bool, time: bool, search: Algorithm, log_name: &Option<String>) -> Runtime {
         let mut file = None;
         if log_name.is_some() {
@@ -46,6 +63,13 @@ impl Runtime {
             seen: HashSet::new(),
         }
     }
+    /*
+    Wrapper function to write formatted string
+    to stdout (if needed) and file (if needed)
+
+    Note that file output may be mangled due to
+    coloring of formatted strings.
+    */
     pub fn print(&mut self, s: String) {
         if self.trace {
             print!("{}", s);

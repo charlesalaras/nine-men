@@ -5,6 +5,14 @@ use crate::runtime::Algorithm;
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 
+/*
+Node object to represent any given state of the puzzle:
+- state: Array of size LINE_SIZE + CUTAWAYS. Note that the cutaways are placed at the back of the array.
+- cutaways: Array of indices denoting where the cutaway exists in relation to the line.
+- zero_tiles: Array of indices denoting which tiles are zero. Note that this should always be CUTAWAYS + 1 size.
+- g: The cost function
+- h: The heuristic function (This is zero for UCS)
+*/
 #[derive(Copy, Clone)]
 pub struct Node {
     pub state: [u32; LINE_SIZE + CUTAWAYS],
@@ -15,6 +23,7 @@ pub struct Node {
 }
 
 impl Node {
+    // Constructs and returns a node
     pub fn init(
         state: [u32; LINE_SIZE + CUTAWAYS],
         cutaways: [usize; CUTAWAYS],
@@ -22,9 +31,7 @@ impl Node {
         algorithm: Algorithm,
     ) -> Node {
         let mut h: u32 = 0;
-        // If we know where the zero tile is, then just use the given
-        // Otherwise, we have to find it
-        // Note that cutaways are a seperate type of zero tile
+        // Find all zero tiles
         let mut zero_tiles: [usize; CUTAWAYS + 1] = [0, 0, 0, 0];
         let mut j = 0;
         for i in 0..LINE_SIZE + CUTAWAYS {
@@ -43,7 +50,7 @@ impl Node {
                     }
                 }
             }
-            // Note that the heuristic only cares about
+            // Note that the Manhattan heuristic only cares about
             // where the '1' tile is.
             crate::Algorithm::ManhattanDist => {
                 for i in 0..LINE_SIZE {
@@ -71,6 +78,7 @@ impl Node {
             h,
         }
     }
+    // Returns a string representing the node's state
     pub fn print(&self) -> String {
         let mut cutaway_str = String::new();
         let mut line_str = String::new();
@@ -91,6 +99,13 @@ impl Node {
     }
 }
 
+/*
+Comparison function required for the queue.
+Note that by returning Ordering::Greater for lower f(n),
+and Ordering::Less for higher f(n),
+we are creating a min-queue, expanding nodes with
+the lowest f(n) = g(n) + h(n)
+*/
 impl Ord for Node {
     fn cmp(&self, other: &Self) -> Ordering {
         let self_cost: u32 = self.g + self.h;
@@ -100,6 +115,7 @@ impl Ord for Node {
         } else if other_cost > self_cost {
             Ordering::Less
         } else {
+            // Tie breaker: Use the lower cost
             if self.g < other.g {
                 Ordering::Greater
             } else {
@@ -109,18 +125,32 @@ impl Ord for Node {
     }
 }
 
+/*
+Hash implementation. This simply takes the state and hashes it.
+This is important because hashing the entire node leads to duplicates.
+Example: Same state, but different costs.
+*/
 impl Hash for Node {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.state.hash(state);
     }
 }
 
+/*
+PartialOrd is required for the queue, it simply compares using the above Ord
+*/
 impl PartialOrd for Node {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
+/*
+PartialEq to determine Node equality.
+The function simply checks if the state is equivalent.
+Eq (defined below), is based off of this PartialEq.
+This is required for the queue.
+*/
 impl PartialEq for Node {
     fn eq(&self, other: &Self) -> bool {
         for i in 0..LINE_SIZE + CUTAWAYS {
