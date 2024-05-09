@@ -116,11 +116,12 @@ impl Ord for Node {
             Ordering::Less
         } else {
             // Tie breaker: Use the lower cost
-            if self.g < other.g {
+            /*if self.g < other.g {
                 Ordering::Greater
             } else {
                 Ordering::Less
-            }
+            }*/
+            Ordering::Equal
         }
     }
 }
