@@ -39,9 +39,17 @@ fn create_state() -> [u32; LINE_SIZE + CUTAWAYS] {
     let mut zeroes = 0;
     while i < LINE_SIZE + CUTAWAYS {
         if i < LINE_SIZE {
-            print!("Enter value for the {}-th tile: ", i);
+            println!(
+                "Enter value for tile #{} ({} empty tiles left): ",
+                i,
+                (CUTAWAYS + 1) - zeroes
+            );
         } else {
-            print!("Enter value for the {}-th cutaway: ", i - LINE_SIZE);
+            println!(
+                "Enter value for the cutaway #{} ({} empty tiles left): ",
+                i - LINE_SIZE,
+                (CUTAWAYS + 1) - zeroes
+            );
         }
         let mut str = String::new();
         io::stdin()
@@ -50,10 +58,9 @@ fn create_state() -> [u32; LINE_SIZE + CUTAWAYS] {
         let tile = str.trim().parse::<u32>();
         if tile.is_ok() {
             let value = tile.unwrap();
-            if value == 0 && zeroes >= CUTAWAYS {
+            if value == 0 && zeroes >= CUTAWAYS + 1 {
                 println!("Too many empty tiles have been placed! Please choose a valid tile");
-            }
-            if value < 10 {
+            } else if value < 10 {
                 state[i] = value;
                 i = i + 1;
                 if value == 0 {
